@@ -1,0 +1,7 @@
+name = OA Book Manager
+description = "Provides group management of it's own book outlines."
+core = 6.x
+package = 'Atrium Tweaks'
+project = "oa_book_manager"
+project status url = "http://grayside.org/fserver"
+version = "6.x-1.0-alpha"

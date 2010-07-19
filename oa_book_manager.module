@@ -1,0 +1,99 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ *  Provides group-localized book outline administration.
+ * Currently provides access to anyone that can access the space.
+ * In the future it should be restricted to group managers.
+ */
+
+/**
+ * Implementation of hook_menu_alter().
+ * Duplicate book reordering form into space.
+ */
+function oa_book_manager_menu_alter(&$items) {
+  $items['notebook/manage/%node'] = $items['admin/content/book/%node'];
+  $items['notebook/manage/%node']['page arguments'] = array('book_admin_edit', 2);
+  $items['notebook/manage/%node']['access callback'] = '_oa_book_manager_outline_access';
+  $items['notebook/manage/%node']['access arguments'] = array(2);
+  $items['notebook/manage/%node']['type'] = MENU_LOCAL_TASK;
+  
+  $items['notebook/manage'] = array(
+    'title' => 'Manage Books',
+    'description' => "Manage your group's book outlines.",
+    'page callback' => 'oa_book_manager_admin_overview',
+    'access callback' => '_oa_book_manager_outline_access',
+    'access arguments' => array(),
+    'type' => MENU_LOCAL_TASK,
+  );
+}
+
+/**
+ * Menu callback for notebook/manage
+ */
+function oa_book_manager_admin_overview() {
+  $books = views_get_view('atrium_book_current');
+  $books->execute_display('default', array());
+
+  $rows = array();
+  foreach ($books->result as $book) {
+    $rows[] = array(l($book->node_title, 'node/' . $book->nid), 
+      l(t('edit book'), 'node/' . $book->nid . '/edit',
+      array('attributes' => array('title' => t('Edit the top-level page for "' . $book->node_title . '"'))))
+      . ' &middot; ' . l(t('edit order and titles'), "notebook/manage/". $book->nid));  
+  }
+  $headers = array(t('Book'), t('Operations'));
+
+  return theme('table', $headers, $rows);
+}
+
+/**
+ * Access callback for notebook/manage/%node..
+ * @see _book_outline_access()
+ */
+function _oa_book_manager_outline_access($node = NULL) {
+  $space = spaces_get_space();
+  return og_is_group_admin($space->group);
+}
+
+/**
+ * Implementation of hook_context_default_contexts_alter().
+ */
+function oa_book_manager_context_default_contexts_alter(&$contexts) {
+  $contexts['spaces-feature-book']->conditions[] = array(
+    'path' => array(
+      'values' => array(
+        'notebook/manage*' => 'notebook/manage*',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_context_conditions_fetch_alter().
+ * Compatible with context-6.x-3.0-beta3
+ */
+function oa_book_manager_context_condition_fetch_alter(&$condition, $context) {
+  $context = context_load('spaces-feature-book');
+  $context->conditions['path'] = array(
+    'values' => array(
+      'notebook/manage*' => 'notebook/manage*',
+    ),
+  );
+  context_save($context);
+}
+
+/**
+ * Implementation of hook_context_load_alter().
+ * Compatible with context-6.x-3.0-beta4
+ */
+function oa_book_manager_context_load_alter(&$context) {
+  if ($context->name == 'spaces-feature-book') {
+    $context->conditions['path'] = array(
+      'values' => array(
+        'notebook/manage*' => 'notebook/manage*',
+      ),
+    );
+  } 
+}
