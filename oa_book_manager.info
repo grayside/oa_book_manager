@@ -1,7 +1,10 @@
-name = OA Book Manager
+core = "6.x"
+dependencies[] = "context"
 description = "Provides group management of it's own book outlines."
-core = 6.x
-package = 'Atrium Tweaks'
+features[context][] = "oa_book_manager"
+features[ctools][] = "context:context:3"
+name = "OA Book Manager"
+package = "Atrium Tweaks"
 project = "oa_book_manager"
-project status url = "http://grayside.org/fserver"
+project status url = "http://project.grayside.org/fserver"
 version = "6.x-1.0-alpha"

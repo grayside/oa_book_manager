@@ -14,11 +14,11 @@
  */
 function oa_book_manager_menu_alter(&$items) {
   $items['notebook/manage/%node'] = $items['admin/content/book/%node'];
-  $items['notebook/manage/%node']['page arguments'] = array('book_admin_edit', 2);
+  $items['notebook/manage/%node']['page arguments'] = array('oa_book_admin_edit', 2);
   $items['notebook/manage/%node']['access callback'] = '_oa_book_manager_outline_access';
   $items['notebook/manage/%node']['access arguments'] = array(2);
   $items['notebook/manage/%node']['type'] = MENU_LOCAL_TASK;
-  
+
   $items['notebook/manage'] = array(
     'title' => 'Manage Books',
     'description' => "Manage your group's book outlines.",
@@ -33,19 +33,20 @@ function oa_book_manager_menu_alter(&$items) {
  * Menu callback for notebook/manage
  */
 function oa_book_manager_admin_overview() {
-  $books = views_get_view('atrium_book_current');
-  $books->execute_display('default', array());
+  return t('Click on a book to the right to rearrange the hierarchy of pages.');
+}
 
-  $rows = array();
-  foreach ($books->result as $book) {
-    $rows[] = array(l($book->node_title, 'node/' . $book->nid), 
-      l(t('edit book'), 'node/' . $book->nid . '/edit',
-      array('attributes' => array('title' => t('Edit the top-level page for "' . $book->node_title . '"'))))
-      . ' &middot; ' . l(t('edit order and titles'), "notebook/manage/". $book->nid));  
-  }
-  $headers = array(t('Book'), t('Operations'));
-
-  return theme('table', $headers, $rows);
+/**
+ * Menu callback for notebook/manage/%node
+ */
+function oa_book_admin_edit($form_state, $node) {
+//  drupal_set_title($node->title);
+  $form = book_admin_edit($form_state, $node);
+  $form['preamble'] = array(
+    '#value' => '<div id="page-title"><h2 class="page-title">Book: ' . l($node->title, 'node/' . $node->nid) . '</h2></div>',
+    '#weight' => -50,
+  );
+  return $form;
 }
 
 /**
@@ -96,4 +97,45 @@ function oa_book_manager_context_load_alter(&$context) {
       ),
     );
   } 
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function oa_book_manager_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      return array('books' => array('info' => t('Manage Books')));
+    case 'configure':
+      return array();
+    case 'save':
+      return;
+    case 'view':
+      $block = array();
+      switch ($delta) {
+        case 'books':
+          $block['subject'] = t('Manage Books');
+          $block['content'] = og_book_manager_books_block_content();
+          break;
+      }
+      return $block;
+  }
+}
+
+/**
+ * Block content callback for books block.
+ */
+function og_book_manager_books_block_content() {
+  $books = views_get_view('atrium_book_current');
+  $books->execute_display('default', array());
+
+  $rows = array();
+  foreach ($books->result as $book) {
+    $rows[] = l($book->node_title, 'notebook/manage/' . $book->nid) 
+      . ' [' . l(t('manage'), 'notebook/manage/' . $book->nid)
+      . ' &middot; ' . l(t('edit'), 'node/' . $book->nid . '/edit')
+      . ' &middot; ' . l(t('view'), 'node/' . $book->nid) . ']';
+  }
+
+  return theme('item_list', $rows);
 }
