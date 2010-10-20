@@ -4,9 +4,9 @@
 /**
  * @file
  *  Provides group-localized book outline administration.
- * Currently provides access to anyone that can access the space.
- * In the future it should be restricted to group managers.
  */
+
+include_once('oa_book_manager.features.inc');
 
 /**
  * Implementation of hook_menu_alter().
@@ -55,48 +55,15 @@ function oa_book_admin_edit($form_state, $node) {
  */
 function _oa_book_manager_outline_access($node = NULL) {
   $space = spaces_get_space();
-  return og_is_group_admin($space->group);
+  return og_is_group_admin($space->group) || user_access('administer books');
 }
 
 /**
  * Implementation of hook_context_default_contexts_alter().
  */
 function oa_book_manager_context_default_contexts_alter(&$contexts) {
-  $contexts['spaces-feature-book']->conditions[] = array(
-    'path' => array(
-      'values' => array(
-        'notebook/manage*' => 'notebook/manage*',
-      ),
-    ),
-  );
-}
-
-/**
- * Implementation of hook_context_conditions_fetch_alter().
- * Compatible with context-6.x-3.0-beta3
- */
-function oa_book_manager_context_condition_fetch_alter(&$condition, $context) {
-  $context = context_load('spaces-feature-book');
-  $context->conditions['path'] = array(
-    'values' => array(
-      'notebook/manage*' => 'notebook/manage*',
-    ),
-  );
-  context_save($context);
-}
-
-/**
- * Implementation of hook_context_load_alter().
- * Compatible with context-6.x-3.0-beta4
- */
-function oa_book_manager_context_load_alter(&$context) {
-  if ($context->name == 'spaces-feature-book') {
-    $context->conditions['path'] = array(
-      'values' => array(
-        'notebook/manage*' => 'notebook/manage*',
-      ),
-    );
-  } 
+  $contexts['book_listing']->conditions['path']['values']['notebook/manage'] = 'notebook/manage';
+  $contexts['book_listing']->conditions['path']['values']['notebook/manage/*'] = 'notebook/manage/*';
 }
 
 /**
@@ -126,7 +93,7 @@ function oa_book_manager_block($op = 'list', $delta = 0, $edit = array()) {
  * Block content callback for books block.
  */
 function og_book_manager_books_block_content() {
-  $books = views_get_view('atrium_book_current');
+  $books = views_get_view('book_current');
   $books->execute_display('default', array());
 
   $rows = array();
