@@ -46,6 +46,9 @@ function oa_book_admin_edit($form_state, $node) {
     '#value' => '<div id="page-title"><h2 class="page-title">Book: ' . l($node->title, 'node/' . $node->nid) . '</h2></div>',
     '#weight' => -50,
   );
+  $form['#validate'][] = 'book_admin_edit_validate';
+  $form['#submit'][] = 'book_admin_edit_submit';
+
   return $form;
 }
 
