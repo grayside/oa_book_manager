@@ -65,8 +65,10 @@ function _oa_book_manager_outline_access($node = NULL) {
  * Implementation of hook_context_default_contexts_alter().
  */
 function oa_book_manager_context_default_contexts_alter(&$contexts) {
-  $contexts['book_listing']->conditions['path']['values']['notebook/manage'] = 'notebook/manage';
-  $contexts['book_listing']->conditions['path']['values']['notebook/manage/*'] = 'notebook/manage/*';
+  if (isset($contexts['book_listing'])) {
+    $contexts['book_listing']->conditions['path']['values']['notebook/manage'] = 'notebook/manage';
+    $contexts['book_listing']->conditions['path']['values']['notebook/manage/*'] = 'notebook/manage/*';
+  }
 }
 
 /**
